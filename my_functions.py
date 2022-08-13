@@ -1,6 +1,8 @@
 import os.path
 import csv
 from google_sheets import GoogleSheet
+from settings import ADMIN_ID
+
 #формирование csv докумената и добавление записей
 #//////////////////////////////////////////////////////////
 def past_link(text, link):
@@ -33,6 +35,12 @@ def add_row_for_csv_file(user_name, type_file, name_file, link_for_file):
             writer.writerow((user_name, '', '', '', past_link(name_file, link_for_file)))
 #//////////////////////////////////////////////////////////////
 
+
+#запись файла на сервер
+
+
+
+#//////////////////////////////////////////////////////////////
 #работа с google sheets
 #//////////////////////////////////////////////////////////////
 def add_row_for_google_sheets(user_name, type_file, name_file, link_for_file):

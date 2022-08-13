@@ -3,7 +3,7 @@ import shutil
 
 import telebot
 from telebot import types
-from settings import tn
+from settings import tn, ADMIN_ID
 from my_functions import add_row_for_csv_file, past_link
 from shutil import make_archive
 from google_sheets import GoogleSheet
@@ -12,6 +12,57 @@ from test import upload_to_folder
 
 
 bot = telebot.TeleBot(tn)
+user_last_command = {}
+def writing_file_to_server(message, type_dir, file_name=None):
+    if type_dir == 'video_view_bottom':
+        try:
+            file_info = bot.get_file(message.video.file_id)
+            downloaded_file = bot.download_file(file_info.file_path)
+            file_name = file_info.file_path.split('/')[-1]
+            with open(f'./files/video_view_bottom/{file_name}', 'wb') as f:
+                f.write(downloaded_file)
+            bot.send_message(message.chat.id, 'видео загружено')
+        except:
+            print('ошибка загрузки видео')
+            bot.send_message(message.chat.id, 'ошибка загрузки видео')
+            bot.copy_message(ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id)
+    elif type_dir == 'photo_view_from_office_window':
+        try:
+            file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
+            downloaded_file = bot.download_file(file_info.file_path)
+            file_name = file_info.file_path.split('/')[-1]
+            with open(f'./files/photo_view_from_office_window/{file_name}', 'wb') as f:
+                f.write(downloaded_file)
+            bot.send_message(message.chat.id, 'фото загружено')
+        except:
+            print('ошибка загрузки фото')
+            bot.send_message(message.chat.id, 'ошибка загрузки фото')
+            bot.copy_message(ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id)
+    elif type_dir== 'photo_in_the_opening_year':
+        try:
+            file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
+            downloaded_file = bot.download_file(file_info.file_path)
+            file_name = file_info.file_path.split('/')[-1]
+            with open(f'./files/photo_in_the_opening_year/{file_name}', 'wb') as f:
+                f.write(downloaded_file)
+            bot.send_message(message.chat.id, 'фото загружено')
+        except Exception as e:
+            print('ошибка загрузки фото', e)
+            bot.send_message(message.chat.id, 'ошибка загрузки фото')
+            bot.copy_message(ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id)
+    elif type_dir == 'drawings_bank_future':
+        try:
+            file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
+            downloaded_file = bot.download_file(file_info.file_path)
+            file_name = file_info.file_path.split('/')[-1]
+            with open(f'./files/drawings_bank_future/{file_name}', 'wb') as f:
+                f.write(downloaded_file)
+            bot.send_message(message.chat.id, 'фото загружено')
+        except:
+            print('ошибка загрузки фото')
+            bot.send_message(message.chat.id, 'ошибка загрузки фото')
+            bot.copy_message(ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id)
+
 
 
 @bot.message_handler(commands=['start'])
@@ -32,82 +83,34 @@ def welcome(message):
 
 
 
-@bot.message_handler(content_types=['text', 'photo', 'document', 'audio', 'video'])
+@bot.message_handler(content_types=['text'])
 def body(message):
     user_name = message.from_user.first_name
     gs = GoogleSheet()
-    if message.text == 'Текст':
-        bot.send_message(message.chat.id, 'Отправьте текстовый документ')
-    elif message.text == 'Фото':
+
+    if message.text == 'Фотографии в год открытия':
         bot.send_message(message.chat.id, 'Отправьте фото')
-    elif message.text == 'Видео':
+        user_last_command[message.chat.id] = 'photo_in_the_opening_year'
+
+    elif message.text == 'Рисунки "Банк будущего"':
+        bot.send_message(message.chat.id, 'Отправьте фото')
+        user_last_command[message.chat.id] = 'drawings_bank_future'
+
+    elif message.text == 'Видео "Взгляд снизу"':
         bot.send_message(message.chat.id, 'Отправьте видео')
-    elif message.text == 'Аудио':
-        bot.send_message(message.chat.id, 'Отправьте аудиофайл')
+        user_last_command[message.chat.id] = 'video_view_bottom'
 
-    if message.photo:
-        try:
-            file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
-            downloaded_file = bot.download_file(file_info.file_path)
-            with open(f'./files/{file_info.file_path}', 'wb') as f:
-                f.write(downloaded_file)
+    elif message.text == 'Фотография с видом из окна офиса':
+        bot.send_message(message.chat.id, 'Отправьте фото')
+        user_last_command[message.chat.id] = 'photo_view_from_office_window'
 
-            file_name = file_info.file_path.split('/')[-1]
-            upload_to_folder('1-a01zV7cZSYyO0G0XCDeVwg455ZgcThJ', f'./files/{file_info.file_path}', file_name)
-            add_row_for_csv_file(user_name, message.content_type, file_name, f'./{file_info.file_path}')
-            # gs.add('Лист1!A1', values=[user_name, past_link(file_name, f'./{file_info.file_path}')])
-            bot.send_message(message.chat.id, 'фото загружено')
-        except Exception as e:
-            print('ошибка загрузки фото')
-            print(e)
-            bot.send_message(message.chat.id, 'ошибка загрузки фото')
 
-    elif message.document:
-        try:
-            file_info = bot.get_file(message.document.file_id)
-            downloaded_file = bot.download_file(file_info.file_path)
-            with open(f'./files/documents/{message.document.file_name}', 'wb') as f:
-                f.write(downloaded_file)
 
-            add_row_for_csv_file(user_name, message.content_type, message.document.file_name, f'./documents/{message.document.file_name}')
-            bot.send_message(message.chat.id, 'документ загружен')
-        except Exception as e:
-            print(e)
-            print('ошибка загрузки документа')
-            bot.send_message(message.chat.id, 'ошибка загрузки документа')
 
-    elif message.audio:
-        try:
-            file_info = bot.get_file(message.audio.file_id)
-            downloaded_file = bot.download_file(file_info.file_path)
-            with open(f'./files/{file_info.file_path}', 'wb') as f:
-                f.write(downloaded_file)
-
-            file_name = file_info.file_path.split('/')[-1]
-            add_row_for_csv_file(user_name, message.content_type, file_name, f'./{file_info.file_path}')
-            bot.send_message(message.chat.id, 'аудиофайл загружен')
-        except:
-            print('ошибка загрузки аудио')
-            bot.send_message(message.chat.id, 'ошибка загрузки аудио')
-
-    elif message.video:
-        try:
-            # file_id = message.document.file_id
-            file_info = bot.get_file(message.video.file_id)
-            downloaded_file = bot.download_file(file_info.file_path)
-            with open(f'./files/{file_info.file_path}', 'wb') as f:
-                f.write(downloaded_file)
-
-            file_name = file_info.file_path.split('/')[-1]
-            add_row_for_csv_file(user_name, message.content_type, file_name, f'./{file_info.file_path}')
-            bot.send_message(message.chat.id, 'видео загружено')
-        except:
-            print('ошибка загрузки видео')
-            bot.send_message(message.chat.id, 'ошибка загрузки видео')
-            bot.copy_message(1536252416, from_chat_id=message.chat.id, message_id=message.message_id)
-
-    shutil.make_archive('files_archive', 'zip', './files')
-
+@bot.message_handler(content_types=['photo', 'video'])
+def body(message):
+    writing_file_to_server(message, user_last_command[message.chat.id])
+    del user_last_command[message.chat.id]
 
 if __name__ == '__main__':
     bot.infinity_polling(none_stop=True)
