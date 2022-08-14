@@ -1,0 +1,68 @@
+from __future__ import print_function
+import os.path
+import pickle
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from settings import id_table
+
+import google.auth
+from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaFileUpload
+
+
+
+def upload_to_folder(real_folder_id, file_for_load, file_name):
+    SCOPES = ['https://www.googleapis.com/auth/drive'+'https://www.googleapis.com/auth/spreadsheets']
+    creds = None
+    if os.path.exists('token.json'):
+        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open('token.json', 'w') as token:
+            token.write(creds.to_json())
+
+    try:
+        # create drive api client
+        service_drive = build('drive', 'v3', credentials=creds)
+        service_table = build('sheets', 'v4', credentials=creds)
+
+        if real_folder_id == '1cVEcLbtdp3wvIn80ozCpjaF8vcfLlHiW':
+            folder_id = real_folder_id
+            file_metadata = {
+                'name': f'{file_name}',
+                'parents': [folder_id]
+            }
+            media = MediaFileUpload(file_for_load, mimetype='video/mp4', resumable=True)
+            # pylint: disable=maybe-no-member
+        else:
+            folder_id = real_folder_id
+            file_metadata = {
+                'name': f'{file_name}',
+                'parents': [folder_id]
+            }
+            media = MediaFileUpload(file_for_load, mimetype='image/jpg', resumable=True)
+            # pylint: disable=maybe-no-member
+
+        file = service_drive.files().create(body=file_metadata, media_body=media,
+                                      fields='id').execute()
+        print(F'File with ID: "{file.get("id")}" has added to the folder with '
+              F'ID "{real_folder_id}".')
+
+    except HttpError as error:
+        print(F'An error occurred: {error}')
+        file = None
+
+    return file.get('id')
+
+
+if __name__ == '__main__':
+    upload_to_folder(real_folder_id='1RJ2UL9iZX1R_raTi1WjmLiexv2aj1yGq', file_for_load='./files/photo_in_the_opening_year/file_127.jpg', file_name='файл')

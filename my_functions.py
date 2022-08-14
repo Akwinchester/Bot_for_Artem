@@ -10,37 +10,32 @@ def past_link(text, link):
     return rusult
 
 
-def add_row_for_csv_file(user_name, type_file, name_file, link_for_file):
+def add_row_for_csv_file(user_name, dir, name_file, link_for_file):
     if not os.path.exists('files/data.csv'):
-        headlines = ['пользователь','фото', 'текст', 'видео', 'аудио']
+        headlines = ['пользователь', 'Фотографии в год открытия', 'Рисунки "Банк будущего"', 'Видео "Взгляд снизу"', 'Фотография с видом из окна офиса']
         with open('files/data.csv', 'w') as file:
             writer = csv.writer(file, delimiter=';', lineterminator='\n')
             writer.writerow(headlines)
 
-    if type_file == 'photo':
+    if dir == 'photo_in_the_opening_year':
         with open('files/data.csv', 'a') as file:
             writer = csv.writer(file, delimiter=';',  lineterminator='\n')
             writer.writerow((user_name, past_link(name_file, link_for_file)))
-    if type_file == 'document':
+    if dir == 'drawings_bank_future':
         with open('files/data.csv', 'a') as file:
             writer = csv.writer(file, delimiter=';',  lineterminator='\n')
             writer.writerow((user_name, '', past_link(name_file, link_for_file)))
-    if type_file == 'video':
+    if dir == 'video_view_bottom':
         with open('files/data.csv', 'a') as file:
             writer = csv.writer(file, delimiter=';',  lineterminator='\n')
             writer.writerow((user_name, '', '', past_link(name_file, link_for_file)))
-    if type_file == 'audio':
+    if dir == 'photo_view_from_office_window':
         with open('files/data.csv', 'a') as file:
             writer = csv.writer(file, delimiter=';',  lineterminator='\n')
             writer.writerow((user_name, '', '', '', past_link(name_file, link_for_file)))
 #//////////////////////////////////////////////////////////////
 
 
-#запись файла на сервер
-
-
-
-#//////////////////////////////////////////////////////////////
 #работа с google sheets
 #//////////////////////////////////////////////////////////////
 def add_row_for_google_sheets(user_name, type_file, name_file, link_for_file):

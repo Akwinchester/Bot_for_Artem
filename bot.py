@@ -3,16 +3,22 @@ import shutil
 
 import telebot
 from telebot import types
-from settings import tn, ADMIN_ID
+from settings import tn, ADMIN_ID, id_dir_on_drive
 from my_functions import add_row_for_csv_file, past_link
 from shutil import make_archive
 from google_sheets import GoogleSheet
 import requests
-from test import upload_to_folder
+import json
+from google_service import upload_to_folder
 
 
 bot = telebot.TeleBot(tn)
 user_last_command = {}
+register_users = {}
+if os.path.exists('./users.json'):
+    with open('./users.json', 'r', encoding="utf-8") as f:
+        register_users = json.load(f)
+
 def writing_file_to_server(message, type_dir, file_name=None):
     if type_dir == 'video_view_bottom':
         try:
@@ -85,8 +91,17 @@ def welcome(message):
 
 @bot.message_handler(content_types=['text'])
 def body(message):
+    register_message_command = None
+    register_name = None
+    if ':' in message.text:
+        register_message_command = str(message.text).split(':')[0]
+        register_name = str(message.text).split(':')[1]
     user_name = message.from_user.first_name
-    gs = GoogleSheet()
+
+    if register_message_command == 'Регистрация' or register_message_command == 'регистрация':
+        register_users[message.chat.id] = register_name
+        with open('./users.json', 'w',encoding="utf-8") as f:
+            json.dump(register_users, f, ensure_ascii=False)
 
     if message.text == 'Фотографии в год открытия':
         bot.send_message(message.chat.id, 'Отправьте фото')
@@ -109,7 +124,17 @@ def body(message):
 
 @bot.message_handler(content_types=['photo', 'video'])
 def body(message):
+    if message.photo:
+        file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
+    elif message.video:
+        file_info = bot.get_file(message.video.file_id)
+    user_name = message.from_user.first_name
+    file_name = file_info.file_path.split('/')[-1]
     writing_file_to_server(message, user_last_command[message.chat.id])
+    upload_to_folder(real_folder_id=id_dir_on_drive[user_last_command[message.chat.id]], file_for_load=f'./files/{user_last_command[message.chat.id]}/{file_name}', file_name=file_name)
+    print(f'./files/{user_last_command[message.chat.id]}/{file_name}')
+
+    add_row_for_csv_file(register_users[str(message.chat.id)], user_last_command[message.chat.id], file_name, f'./{user_last_command[message.chat.id]}/{file_name}')
     del user_last_command[message.chat.id]
 
 if __name__ == '__main__':
