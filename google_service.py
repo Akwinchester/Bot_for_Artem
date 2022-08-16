@@ -12,30 +12,53 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
 
+def add( service_table, values, range = None):
+    range = 'Лист1!A1'
+    SPREADSHEET_ID = id_table
+    body = {'values': [values]}
+    result = service_table.spreadsheets().values().append(
+        spreadsheetId=SPREADSHEET_ID, range=range,
+        valueInputOption='USER_ENTERED', body=body).execute()
 
-def upload_to_folder(real_folder_id, file_for_load, file_name):
+
+def upload_to_folder(real_folder_id, file_for_load, file_name, user_name):
     SCOPES = ['https://www.googleapis.com/auth/drive'+'https://www.googleapis.com/auth/spreadsheets']
     creds = None
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    # If there are no (valid) credentials available, let the user log in.
+    # if os.path.exists('token.json'):
+    #     creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    # # If there are no (valid) credentials available, let the user log in.
+    # if not creds or not creds.valid:
+    #     if creds and creds.expired and creds.refresh_token:
+    #         creds.refresh(Request())
+    #     else:
+    #         flow = InstalledAppFlow.from_client_secrets_file(
+    #             'credentials.json', SCOPES)
+    #         creds = flow.run_local_server(port=0)
+    #     # Save the credentials for the next run
+    #     with open('token.json', 'w') as token:
+    #         token.write(creds.to_json())
+
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as token:
+            creds = pickle.load(token)
+
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
+            print('flow')
             flow = InstalledAppFlow.from_client_secrets_file(
                 'credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
+        with open('token.pickle', 'wb') as token:
+            pickle.dump(creds, token)
 
     try:
         # create drive api client
         service_drive = build('drive', 'v3', credentials=creds)
         service_table = build('sheets', 'v4', credentials=creds)
 
-        if real_folder_id == '1cVEcLbtdp3wvIn80ozCpjaF8vcfLlHiW':
+        if real_folder_id == '1FfaFJrv2NZYVPwaAV3K0dtmKaWBdTMfo':
             folder_id = real_folder_id
             file_metadata = {
                 'name': f'{file_name}',
@@ -57,12 +80,30 @@ def upload_to_folder(real_folder_id, file_for_load, file_name):
         print(F'File with ID: "{file.get("id")}" has added to the folder with '
               F'ID "{real_folder_id}".')
 
+        #запись в таблицу
+        file_id_drive = file.get('id')
+        print(file_id_drive)
+        list_for_add = []
+        if real_folder_id == '1nDtWwr9PuKHK--g4VqVGmGuRQ23eQ0zD':
+            list_for_add = [user_name,
+                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")']
+        elif real_folder_id == '1j6Ry93iaxJkzY6cCNGk9Y1NxjShraEfP':
+            list_for_add = [user_name, '',
+                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")']
+        elif real_folder_id == '1FfaFJrv2NZYVPwaAV3K0dtmKaWBdTMfo':
+            list_for_add = [user_name, '', '',
+                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")']
+        elif real_folder_id == '1LrmRdzERk4UocJFkH88GBt9fjQB04VTv':
+            list_for_add = [user_name, '', '', '',
+                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")']
+        elif real_folder_id == '1Njz5FdvAcElVY6rFucxCX7Ffh-IL_AkT':
+            list_for_add = [user_name, '', '', '', '',
+                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")']
+        add(service_table=service_table, values=list_for_add)
+
     except HttpError as error:
         print(F'An error occurred: {error}')
         file = None
 
     return file.get('id')
 
-
-if __name__ == '__main__':
-    upload_to_folder(real_folder_id='1RJ2UL9iZX1R_raTi1WjmLiexv2aj1yGq', file_for_load='./files/photo_in_the_opening_year/file_127.jpg', file_name='файл')
