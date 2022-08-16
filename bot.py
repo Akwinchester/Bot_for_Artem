@@ -22,9 +22,7 @@ if os.path.exists('./users.json'):
 
 def writing_file_to_server(message, type_dir, file_name=None):
     if type_dir == 'video_view_bottom':
-        bot.send_message(message.chat.id, message)
         try:
-            bot.copy_message(ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id)
             file_info = bot.get_file(message.video.file_id)
             downloaded_file = bot.download_file(file_info.file_path)
             file_name = file_info.file_path.split('/')[-1]
@@ -168,6 +166,7 @@ def body(message):
 
 @bot.message_handler(content_types=['photo', 'video'])
 def body(message):
+
     if str(message.chat.id) in register_users:
         user_name = register_users[str(message.chat.id)]
     else:
@@ -176,7 +175,14 @@ def body(message):
     if message.photo:
         file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
     elif message.video:
-        file_info = bot.get_file(message.video.file_id)
+        try:
+            file_info = bot.get_file(message.video.file_id)
+        except:
+            file_info = f's/{user_name}'
+            bot.send_message(ADMIN_ID, f'пользователь {user_name} отправил слишком большое видео')
+            bot.copy_message(ADMIN_ID, message.chat.id, message.id)
+
+
     file_name = file_info.file_path.split('/')[-1]
     writing_file_to_server(message, user_last_command[message.chat.id])
 
