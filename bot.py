@@ -20,14 +20,13 @@ if os.path.exists('./users.json'):
         register_users = json.load(f)
 
 
-def writing_file_to_server(message, type_dir, file_name=None):
+def writing_file_to_server(message, type_dir, count, file_name=None):
     if type_dir == 'video_view_bottom':
         try:
             file_info = bot.get_file(message.video.file_id)
             downloaded_file = bot.download_file(file_info.file_path)
             with open(f'./files/video_view_bottom/{file_name}', 'wb') as f:
                 f.write(downloaded_file)
-            bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)')
         except:
             print('ошибка загрузки видео')
             bot.send_message(message.chat.id, 'ошибка загрузки видео')
@@ -38,7 +37,7 @@ def writing_file_to_server(message, type_dir, file_name=None):
             downloaded_file = bot.download_file(file_info.file_path)
             with open(f'./files/photo_view_from_office_window/{file_name}', 'wb') as f:
                 f.write(downloaded_file)
-            bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)')
+
         except:
             print('ошибка загрузки фото')
             bot.send_message(message.chat.id, 'ошибка загрузки фото')
@@ -49,7 +48,7 @@ def writing_file_to_server(message, type_dir, file_name=None):
             downloaded_file = bot.download_file(file_info.file_path)
             with open(f'./files/photo_in_the_opening_year/{file_name}', 'wb') as f:
                 f.write(downloaded_file)
-            bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)')
+
         except Exception as e:
             print('ошибка загрузки фото', e)
             bot.send_message(message.chat.id, 'ошибка загрузки фото')
@@ -60,7 +59,7 @@ def writing_file_to_server(message, type_dir, file_name=None):
             downloaded_file = bot.download_file(file_info.file_path)
             with open(f'./files/drawings_bank_future/{file_name}', 'wb') as f:
                 f.write(downloaded_file)
-            bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)')
+
         except:
             print('ошибка загрузки фото')
             bot.send_message(message.chat.id, 'ошибка загрузки фото')
@@ -71,12 +70,13 @@ def writing_file_to_server(message, type_dir, file_name=None):
             downloaded_file = bot.download_file(file_info.file_path)
             with open(f'./files/photo_before_after/{file_name}', 'wb') as f:
                 f.write(downloaded_file)
-            bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)')
+
         except:
             print('ошибка загрузки фото')
             bot.send_message(message.chat.id, 'ошибка загрузки фото')
             bot.copy_message(ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id)
-
+    if count == 1:
+        bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)')
 
 
 @bot.message_handler(commands=['start'])
@@ -159,12 +159,16 @@ def body(message):
 
 
 @bot.message_handler(content_types=['photo', 'video'])
-def body(message):
+def body_content(message):
+    count = 1
+    if len(message.photo) == 1:
+        count = 1
+    elif len(message.photo) == 2:
+        count = 2
 
     if str(message.chat.id) in register_users:
         user_name = register_users[str(message.chat.id)]
     else:
-        print('проблемы с регистрацией')
         user_name = f'{message.from_user.last_name} {message.from_user.first_name}'
     if message.photo:
         file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
@@ -179,11 +183,16 @@ def body(message):
             bot.copy_message(ADMIN_ID, message.chat.id, message.id)
 
     if message.chat.id in user_last_command:
-        writing_file_to_server(message, user_last_command[message.chat.id], file_name=file_name)
-        upload_to_folder(real_folder_id=id_dir_on_drive[user_last_command[message.chat.id]], file_for_load=f'./files/{user_last_command[message.chat.id]}/{file_name}', file_name=file_name, user_name=user_name)
-        add_row_for_csv_file(user_name=user_name, dir=user_last_command[message.chat.id], name_file=file_name, link_for_file=f'./{user_last_command[message.chat.id]}/{file_name}')
+        writing_file_to_server(message, user_last_command[message.chat.id], count=count, file_name=file_name)
+        add_row_for_csv_file(user_name=user_name, dir=user_last_command[message.chat.id], name_file=file_name,
+                             link_for_file=f'./{user_last_command[message.chat.id]}/{file_name}')
+        upload_to_folder(real_folder_id=id_dir_on_drive[user_last_command[message.chat.id]],
+                         file_for_load=f'./files/{user_last_command[message.chat.id]}/{file_name}', file_name=file_name,
+                         user_name=user_name)
         shutil.make_archive('files_archive', 'zip', './files')
-        del user_last_command[message.chat.id]
+
+        if message.chat.id in user_last_command:
+            del user_last_command[message.chat.id]
     else:
         bot.send_message(message.chat.id, 'Перед отправкой файла нужно выбрать тип контента. Воспользуйтесь клавиатурой, чтобы выбрать, чем Вы хотите поделиться. После этого отправьте файл повторно.')
 
