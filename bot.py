@@ -3,7 +3,7 @@ import shutil
 
 import telebot
 from telebot import types
-from settings import tn, ADMIN_ID, id_dir_on_drive
+from settings import tn, ADMIN_ID, id_dir_on_drive, MODERATOR_CHAT_LINK
 from my_functions import add_row_for_csv_file, past_link
 from shutil import make_archive
 import requests
@@ -108,6 +108,7 @@ def body(message):
     global register_users
     register_message_command = None
     register_name = None
+
     if ':' in message.text:
         register_message_command = str(message.text).split(':')[0]
         register_name = str(message.text).split(':')[1]
@@ -122,7 +123,7 @@ def body(message):
                 register_users = json.load(f)
 
         bot.send_message(message.chat.id, '''Очень рады познакомиться!
-Выбирай контент, которым тебе хочется поделиться, чтобы его увидели все участники фестиваля! 
+Выбирай контент, которым тебе хочется поделиться, чтобы его увидели все участники фестиваля!
 ''')
 
     if message.text == 'Фотографии в год открытия':
@@ -148,13 +149,9 @@ def body(message):
         bot.send_message(message.chat.id, 'Признайтесь, вам нравится смотреть подборки «Было/Стало» или «До/После») Покажите и вы нам, какой путь вы прошли и как изменились за 26 лет! Пришлите нам две свои фотографии: из 1996 и 2022 года, а мы превратим это в интерактивную фотогалерею на Values Fest 2022!')
         user_last_command[message.chat.id] = 'photo_before_after'
     elif message.text == 'Задать вопрос':
-        bot.send_message(message.chat.id, 'Опишите проблему')
-        user_last_command[message.chat.id] = 'question'
+        bot.send_message(message.chat.id, 'Перейдите по ссылке в чат с модератором и задайте интересующий Вас вопрос')
+        bot.send_message(message.chat.id, MODERATOR_CHAT_LINK)
 
-    elif message.chat.id in user_last_command:
-        if user_last_command[message.chat.id] == 'question':
-            bot.send_message(ADMIN_ID, f'{message.from_user.first_name} {message.from_user.last_name}')
-            bot.send_message(ADMIN_ID, message.text)
 
 
 
