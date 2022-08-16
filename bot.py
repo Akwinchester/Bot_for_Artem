@@ -25,12 +25,10 @@ def writing_file_to_server(message, type_dir, file_name=None):
         try:
             file_info = bot.get_file(message.video.file_id)
             downloaded_file = bot.download_file(file_info.file_path)
-            file_name = file_info.file_path.split('/')[-1]
             with open(f'./files/video_view_bottom/{file_name}', 'wb') as f:
                 f.write(downloaded_file)
-            bot.copy_message(ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id)
             bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)')
-        except ApiTelegramException:
+        except:
             print('ошибка загрузки видео')
             bot.send_message(message.chat.id, 'ошибка загрузки видео')
             bot.copy_message(ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id)
@@ -38,7 +36,6 @@ def writing_file_to_server(message, type_dir, file_name=None):
         try:
             file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
             downloaded_file = bot.download_file(file_info.file_path)
-            file_name = file_info.file_path.split('/')[-1]
             with open(f'./files/photo_view_from_office_window/{file_name}', 'wb') as f:
                 f.write(downloaded_file)
             bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)')
@@ -50,7 +47,6 @@ def writing_file_to_server(message, type_dir, file_name=None):
         try:
             file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
             downloaded_file = bot.download_file(file_info.file_path)
-            file_name = file_info.file_path.split('/')[-1]
             with open(f'./files/photo_in_the_opening_year/{file_name}', 'wb') as f:
                 f.write(downloaded_file)
             bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)')
@@ -62,7 +58,6 @@ def writing_file_to_server(message, type_dir, file_name=None):
         try:
             file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
             downloaded_file = bot.download_file(file_info.file_path)
-            file_name = file_info.file_path.split('/')[-1]
             with open(f'./files/drawings_bank_future/{file_name}', 'wb') as f:
                 f.write(downloaded_file)
             bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)')
@@ -74,7 +69,6 @@ def writing_file_to_server(message, type_dir, file_name=None):
         try:
             file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
             downloaded_file = bot.download_file(file_info.file_path)
-            file_name = file_info.file_path.split('/')[-1]
             with open(f'./files/photo_before_after/{file_name}', 'wb') as f:
                 f.write(downloaded_file)
             bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)')
@@ -174,23 +168,24 @@ def body(message):
         user_name = f'{message.from_user.last_name} {message.from_user.first_name}'
     if message.photo:
         file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
+        file_name = file_info.file_path.split('/')[-1]
     elif message.video:
         try:
             file_info = bot.get_file(message.video.file_id)
+            file_name = file_info.file_path.split('/')[-1]
         except:
-            file_info = f's/{user_name}'
+            file_name = user_name
             bot.send_message(ADMIN_ID, f'пользователь {user_name} отправил слишком большое видео')
             bot.copy_message(ADMIN_ID, message.chat.id, message.id)
 
-
-    file_name = file_info.file_path.split('/')[-1]
-    writing_file_to_server(message, user_last_command[message.chat.id])
-
-    upload_to_folder(real_folder_id=id_dir_on_drive[user_last_command[message.chat.id]], file_for_load=f'./files/{user_last_command[message.chat.id]}/{file_name}', file_name=file_name, user_name=user_name)
-
-    add_row_for_csv_file(user_name=user_name, dir=user_last_command[message.chat.id], name_file=file_name, link_for_file=f'./{user_last_command[message.chat.id]}/{file_name}')
-    shutil.make_archive('files_archive', 'zip', './files')
-    del user_last_command[message.chat.id]
+    if message.chat.id in user_last_command:
+        writing_file_to_server(message, user_last_command[message.chat.id], file_name=file_name)
+        upload_to_folder(real_folder_id=id_dir_on_drive[user_last_command[message.chat.id]], file_for_load=f'./files/{user_last_command[message.chat.id]}/{file_name}', file_name=file_name, user_name=user_name)
+        add_row_for_csv_file(user_name=user_name, dir=user_last_command[message.chat.id], name_file=file_name, link_for_file=f'./{user_last_command[message.chat.id]}/{file_name}')
+        shutil.make_archive('files_archive', 'zip', './files')
+        del user_last_command[message.chat.id]
+    else:
+        bot.send_message(message.chat.id, 'Перед отправкой файла нужно выбрать тип контента. Воспользуйтесь клавиатурой, чтобы выбрать, чем Вы хотите поделиться. После этого отправьте файл повторно.')
 
 if __name__ == '__main__':
     bot.infinity_polling(none_stop=True)
