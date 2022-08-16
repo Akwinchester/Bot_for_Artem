@@ -13,6 +13,7 @@ from google_service import upload_to_folder, add
 
 bot = telebot.TeleBot(tn)
 user_last_command = {}
+group_photo = {}
 register_users = {}
 
 if os.path.exists('./users.json'):
@@ -92,39 +93,39 @@ def welcome(message):
     markup.add(item_3, item_4)
     markup.add(item_5, item_6)
 
+    markup_inline = types.InlineKeyboardMarkup(row_width=2)
+    item_inline_1 = types.InlineKeyboardButton('Регистрация', callback_data=1)
+    markup_inline.add(item_inline_1)
     bot.send_message(message.chat.id, '''Привет! 
 Спасибо, что решил поучаствовать в создании Values Fest 2022! 
 Пожалуйста, представься, чтобы мы знали всех наших героев по именам)'''
-, reply_markup=markup)
+, reply_markup=markup_inline)
 
-    bot.send_message(message.chat.id, f'''Отправь мне такое сообщение
-ригистрация:ФИО''')
+#     bot.send_message(message.chat.id, f'''Отправь мне такое сообщение
+# ригистрация:ФИО''')
 
-
+@bot.callback_query_handler(func=lambda call:True)
+def register(call):
+    if call.message:
+        user_last_command[call.message.chat.id] = 'register'
+        bot.send_message(call.message.chat.id, 'Введите ФИО')
 
 
 @bot.message_handler(content_types=['text'])
 def body(message):
     global register_users
-    register_message_command = None
-    register_name = None
+    if message.chat.id in user_last_command:
+        if user_last_command[message.chat.id] == 'register':
+            register_users[str(message.chat.id)] = message.text
+            with open('./users.json', 'w', encoding="utf-8") as f:
+                json.dump(register_users, f, ensure_ascii=False)
+            if os.path.exists('./users.json'):
+                with open('./users.json', 'r', encoding="utf-8") as f:
+                    register_users = json.load(f)
 
-    if ':' in message.text:
-        register_message_command = str(message.text).split(':')[0]
-        register_name = str(message.text).split(':')[1]
-    user_name = message.from_user.first_name
-
-    if register_message_command == 'Регистрация' or register_message_command == 'регистрация':
-        register_users[str(message.chat.id)] = register_name
-        with open('./users.json', 'w',encoding="utf-8") as f:
-            json.dump(register_users, f, ensure_ascii=False)
-        if os.path.exists('./users.json'):
-            with open('./users.json', 'r', encoding="utf-8") as f:
-                register_users = json.load(f)
-
-        bot.send_message(message.chat.id, '''Очень рады познакомиться!
-Выбирай контент, которым тебе хочется поделиться, чтобы его увидели все участники фестиваля!
-''')
+            del user_last_command[message.chat.id]
+            bot.send_message(message.chat.id, '''Очень рады познакомиться!
+Выбирай контент, которым тебе хочется поделиться, чтобы его увидели все участники фестиваля!''')
 
     if message.text == 'Фотографии в год открытия':
         bot.send_message(message.chat.id, '''1996 год. В России открывается первое отделение Райффайзен Банк, а чем ты занимаешься в 1996? Ты уже работаешь и развиваешь свои профессиональные навыки? Или ты учишься в Университете и готовишься к защите диплома? Может, ты еще в школе, выбираешь свое будущее и мечтаешь стать космонавтом? Или ты тот самый милый малыш у новогодней елки в детском саду? Найди свое фото из 1996 года, отсканируй или сфотографируй на телефон и пришли его, пожалуйста, нам) 
@@ -158,10 +159,9 @@ def body(message):
 @bot.message_handler(content_types=['photo', 'video'])
 def body_content(message):
     count = 1
-    if len(message.photo) == 1:
-        count = 1
-    elif len(message.photo) == 2:
+    if message.media_group_id != None and not(message.chat.id in group_photo):
         count = 2
+        group_photo[message.chat.id] = 2
 
     if str(message.chat.id) in register_users:
         user_name = register_users[str(message.chat.id)]
@@ -187,9 +187,15 @@ def body_content(message):
                          file_for_load=f'./files/{user_last_command[message.chat.id]}/{file_name}', file_name=file_name,
                          user_name=user_name)
         shutil.make_archive('files_archive', 'zip', './files')
+        if message.chat.id in group_photo:
+            group_photo[message.chat.id] = group_photo[message.chat.id] - 1
 
-        if message.chat.id in user_last_command:
-            del user_last_command[message.chat.id]
+        if message.chat.id in group_photo:
+            if (message.chat.id in user_last_command) and group_photo[message.chat.id] == 0:
+                del user_last_command[message.chat.id]
+                del group_photo[message.chat.id]
+        print(count)
+
     else:
         bot.send_message(message.chat.id, 'Перед отправкой файла нужно выбрать тип контента. Воспользуйтесь клавиатурой, чтобы выбрать, чем Вы хотите поделиться. После этого отправьте файл повторно.')
 
