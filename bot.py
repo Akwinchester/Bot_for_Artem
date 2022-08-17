@@ -202,7 +202,7 @@ def body_content(message):
                              link_for_file=f'./{user_last_command[message.chat.id]}/{file_name}', phone_number=phone_number)
         upload_to_folder(real_folder_id=id_dir_on_drive[user_last_command[message.chat.id]],
                          file_for_load=f'./files/{user_last_command[message.chat.id]}/{file_name}', file_name=file_name,
-                         user_name=user_name)
+                         user_name=user_name, phone_number=phone_number)
         shutil.make_archive('files_archive', 'zip', './files')
         if message.chat.id in group_photo:
             group_photo[message.chat.id] = group_photo[message.chat.id] - 1
