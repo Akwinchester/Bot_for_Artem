@@ -94,8 +94,9 @@ def welcome(message):
     markup.add(item_5, item_6)
 
     markup_inline = types.InlineKeyboardMarkup(row_width=2)
-    item_inline_1 = types.InlineKeyboardButton('Регистрация', callback_data=1)
-    markup_inline.add(item_inline_1)
+    item_inline_1 = types.InlineKeyboardButton('Регистрация', callback_data='register')
+    item_inline_2 = types.InlineKeyboardButton('Указать контактный телефон', callback_data='phone_number')
+    markup_inline.add(item_inline_1, item_inline_2)
     bot.send_message(message.chat.id, '''Привет! 
 Спасибо, что решил поучаствовать в создании Values Fest 2022! 
 Пожалуйста, представься, чтобы мы знали всех наших героев по именам)'''
@@ -107,8 +108,12 @@ def welcome(message):
 @bot.callback_query_handler(func=lambda call:True)
 def register(call):
     if call.message:
-        user_last_command[call.message.chat.id] = 'register'
-        bot.send_message(call.message.chat.id, 'Введите ФИО')
+        if call.data == 'register':
+            user_last_command[call.message.chat.id] = 'register'
+            bot.send_message(call.message.chat.id, 'Введите ФИО')
+        if call.data == 'phone_number':
+            user_last_command[call.message.chat.id] = 'phone_number'
+            bot.send_message(call.message.chat.id, 'Введите номер телефона в формате: 8**********. Разделители указывать не нужно')
 
 
 @bot.message_handler(content_types=['text'])
@@ -116,16 +121,25 @@ def body(message):
     global register_users
     if message.chat.id in user_last_command:
         if user_last_command[message.chat.id] == 'register':
-            register_users[str(message.chat.id)] = message.text
+            register_users[str(message.chat.id)] = {}
+            register_users[str(message.chat.id)]['user_name'] = message.text
             with open('./users.json', 'w', encoding="utf-8") as f:
                 json.dump(register_users, f, ensure_ascii=False)
             if os.path.exists('./users.json'):
                 with open('./users.json', 'r', encoding="utf-8") as f:
                     register_users = json.load(f)
 
-            del user_last_command[message.chat.id]
-            bot.send_message(message.chat.id, '''Очень рады познакомиться!
-Выбирай контент, которым тебе хочется поделиться, чтобы его увидели все участники фестиваля!''')
+            bot.send_message(message.chat.id, '''Очень рады познакомиться! Нажми на кнопку "Указать контактный телефон" под предыдущем сообщением.''')
+        if user_last_command[message.chat.id] == 'phone_number':
+            register_users[str(message.chat.id)]['phone_number'] = message.text
+            bot.send_message(message.chat.id, 'Номер сохранен')
+            bot.send_message(message.chat.id, 'Выбирай контент, которым тебе хочется поделиться, чтобы его увидели все участники фестиваля!')
+            with open('./users.json', 'w', encoding="utf-8") as f:
+                json.dump(register_users, f, ensure_ascii=False)
+            if os.path.exists('./users.json'):
+                with open('./users.json', 'r', encoding="utf-8") as f:
+                    register_users = json.load(f)
+        del user_last_command[message.chat.id]
 
     if message.text == 'Фотографии в год открытия':
         bot.send_message(message.chat.id, '''1996 год. В России открывается первое отделение Райффайзен Банк, а чем ты занимаешься в 1996? Ты уже работаешь и развиваешь свои профессиональные навыки? Или ты учишься в Университете и готовишься к защите диплома? Может, ты еще в школе, выбираешь свое будущее и мечтаешь стать космонавтом? Или ты тот самый милый малыш у новогодней елки в детском саду? Найди свое фото из 1996 года, отсканируй или сфотографируй на телефон и пришли его, пожалуйста, нам) 
@@ -164,9 +178,10 @@ def body_content(message):
         group_photo[message.chat.id] = 2
 
     if str(message.chat.id) in register_users:
-        user_name = register_users[str(message.chat.id)]
+        user_name = register_users[str(message.chat.id)]['user_name']
     else:
         user_name = f'{message.from_user.last_name} {message.from_user.first_name}'
+
     if message.photo:
         file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
         file_name = file_info.file_path.split('/')[-1]
@@ -194,7 +209,7 @@ def body_content(message):
             if (message.chat.id in user_last_command) and group_photo[message.chat.id] == 0:
                 del user_last_command[message.chat.id]
                 del group_photo[message.chat.id]
-        print(count)
+
 
     else:
         bot.send_message(message.chat.id, 'Перед отправкой файла нужно выбрать тип контента. Воспользуйтесь клавиатурой, чтобы выбрать, чем Вы хотите поделиться. После этого отправьте файл повторно.')
