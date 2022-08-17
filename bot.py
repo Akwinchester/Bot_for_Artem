@@ -179,8 +179,10 @@ def body_content(message):
 
     if str(message.chat.id) in register_users:
         user_name = register_users[str(message.chat.id)]['user_name']
+        phone_number = register_users[str(message.chat.id)]['phone_number']
     else:
         user_name = f'{message.from_user.last_name} {message.from_user.first_name}'
+        phone_number = '-'
 
     if message.photo:
         file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
@@ -197,7 +199,7 @@ def body_content(message):
     if message.chat.id in user_last_command:
         writing_file_to_server(message, user_last_command[message.chat.id], count=count, file_name=file_name)
         add_row_for_csv_file(user_name=user_name, dir=user_last_command[message.chat.id], name_file=file_name,
-                             link_for_file=f'./{user_last_command[message.chat.id]}/{file_name}')
+                             link_for_file=f'./{user_last_command[message.chat.id]}/{file_name}', phone_number=phone_number)
         upload_to_folder(real_folder_id=id_dir_on_drive[user_last_command[message.chat.id]],
                          file_for_load=f'./files/{user_last_command[message.chat.id]}/{file_name}', file_name=file_name,
                          user_name=user_name)
