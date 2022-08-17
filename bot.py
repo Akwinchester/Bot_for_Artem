@@ -15,6 +15,9 @@ bot = telebot.TeleBot(tn)
 user_last_command = {}
 group_photo = {}
 register_users = {}
+city_user = {}
+flag_city_user = []
+
 
 if os.path.exists('./users.json'):
     with open('./users.json', 'r', encoding="utf-8") as f:
@@ -102,8 +105,6 @@ def welcome(message):
 Пожалуйста, представься, чтобы мы знали всех наших героев по именам)'''
 , reply_markup=markup_inline)
 
-#     bot.send_message(message.chat.id, f'''Отправь мне такое сообщение
-# ригистрация:ФИО''')
 
 @bot.callback_query_handler(func=lambda call:True)
 def register(call):
@@ -114,6 +115,9 @@ def register(call):
         if call.data == 'phone_number':
             user_last_command[call.message.chat.id] = 'phone_number'
             bot.send_message(call.message.chat.id, 'Введите номер телефона в формате: 8**********. Разделители указывать не нужно')
+        if call.data == 'city':
+            flag_city_user.append(call.message.chat.id)
+            bot.send_message(call.message.chat.id, 'Введите название Вашего города')
 
 
 @bot.message_handler(content_types=['text'])
@@ -128,18 +132,26 @@ def body(message):
             if os.path.exists('./users.json'):
                 with open('./users.json', 'r', encoding="utf-8") as f:
                     register_users = json.load(f)
-
             bot.send_message(message.chat.id, '''Очень рады познакомиться! Нажми на кнопку "Указать контактный телефон" под предыдущем сообщением.''')
+            del user_last_command[message.chat.id]
         if user_last_command[message.chat.id] == 'phone_number':
             register_users[str(message.chat.id)]['phone_number'] = message.text
-            bot.send_message(message.chat.id, 'Номер сохранен')
-            bot.send_message(message.chat.id, 'Выбирай контент, которым тебе хочется поделиться, чтобы его увидели все участники фестиваля!')
             with open('./users.json', 'w', encoding="utf-8") as f:
                 json.dump(register_users, f, ensure_ascii=False)
             if os.path.exists('./users.json'):
                 with open('./users.json', 'r', encoding="utf-8") as f:
                     register_users = json.load(f)
-        del user_last_command[message.chat.id]
+            bot.send_message(message.chat.id, 'Номер сохранен')
+            bot.send_message(message.chat.id, 'Выбирай контент, которым тебе хочется поделиться, чтобы его увидели все участники фестиваля!')
+            del user_last_command[message.chat.id]
+    if message.chat.id in flag_city_user:
+        city_user[message.chat.id] = message.text
+        bot.send_message(message.chat.id, 'Город добавлен')
+        bot.send_message(message.chat.id, 'Отправляйте фото')
+
+    markup_inline_city = types.InlineKeyboardMarkup(row_width=1)
+    item_inline_city = types.InlineKeyboardButton('Указать свой город', callback_data='city')
+    markup_inline_city.add(item_inline_city)
 
     if message.text == 'Фотографии в год открытия':
         bot.send_message(message.chat.id, '''1996 год. В России открывается первое отделение Райффайзен Банк, а чем ты занимаешься в 1996? Ты уже работаешь и развиваешь свои профессиональные навыки? Или ты учишься в Университете и готовишься к защите диплома? Может, ты еще в школе, выбираешь свое будущее и мечтаешь стать космонавтом? Или ты тот самый милый малыш у новогодней елки в детском саду? Найди свое фото из 1996 года, отсканируй или сфотографируй на телефон и пришли его, пожалуйста, нам) 
@@ -158,7 +170,7 @@ def body(message):
 
 
     elif message.text == 'Фотография с видом из окна офиса':
-        bot.send_message(message.chat.id, 'За 26 лет география наших офисов разрослась по всей России! Пришлите фото с видом из окна Вашего офиса с указанием города, у нас будет захватывающая игра, в которой будет и Ваше фото)')
+        bot.send_message(message.chat.id, 'За 26 лет география наших офисов разрослась по всей России! Пришлите фото с видом из окна Вашего офиса с указанием города, у нас будет захватывающая игра, в которой будет и Ваше фото)', reply_markup=markup_inline_city)
         user_last_command[message.chat.id] = 'photo_view_from_office_window'
     elif message.text == 'Фотографии "До/после"':
         bot.send_message(message.chat.id, 'Признайтесь, вам нравится смотреть подборки «Было/Стало» или «До/После») Покажите и вы нам, какой путь вы прошли и как изменились за 26 лет! Пришлите нам две свои фотографии: из 1996 и 2022 года, а мы превратим это в интерактивную фотогалерею на Values Fest 2022!')
@@ -173,6 +185,14 @@ def body(message):
 @bot.message_handler(content_types=['photo', 'video'])
 def body_content(message):
     count = 1
+    city = ''
+    if message.chat.id in city_user:
+        city = city_user[message.chat.id]
+        del city_user[message.chat.id]
+        flag_city_user.remove(message.chat.id)
+    else:
+        city = ''
+
     if message.media_group_id != None and not(message.chat.id in group_photo):
         count = 2
         group_photo[message.chat.id] = 2
@@ -199,10 +219,11 @@ def body_content(message):
     if message.chat.id in user_last_command:
         writing_file_to_server(message, user_last_command[message.chat.id], count=count, file_name=file_name)
         add_row_for_csv_file(user_name=user_name, dir=user_last_command[message.chat.id], name_file=file_name,
-                             link_for_file=f'./{user_last_command[message.chat.id]}/{file_name}', phone_number=phone_number)
+                             link_for_file=f'./{user_last_command[message.chat.id]}/{file_name}', phone_number=phone_number, city=city)
+
         upload_to_folder(real_folder_id=id_dir_on_drive[user_last_command[message.chat.id]],
                          file_for_load=f'./files/{user_last_command[message.chat.id]}/{file_name}', file_name=file_name,
-                         user_name=user_name, phone_number=phone_number)
+                         user_name=user_name, phone_number=phone_number, city=city)
         shutil.make_archive('files_archive', 'zip', './files')
         if message.chat.id in group_photo:
             group_photo[message.chat.id] = group_photo[message.chat.id] - 1
