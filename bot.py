@@ -80,26 +80,35 @@ def writing_file_to_server(message, type_dir, count, file_name=None):
             bot.send_message(message.chat.id, 'ошибка загрузки фото')
             bot.copy_message(ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id)
     if count == 1:
-        bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)')
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        item_1 = types.KeyboardButton('Фотографии в год открытия')
+        item_2 = types.KeyboardButton('Рисунки "Банк будущего"')
+        item_3 = types.KeyboardButton('Видео "Взгляд снизу"')
+        item_4 = types.KeyboardButton('Фотография с видом из окна офиса')
+        item_5 = types.KeyboardButton('Фотографии "До/после"')
+        item_6 = types.KeyboardButton('Задать вопрос')
+        markup.add(item_1, item_2)
+        markup.add(item_3, item_4)
+        markup.add(item_5, item_6)
+        bot.send_message(message.chat.id, 'Спасибо ! Еще немного и ты увидишь насколько ярче и интересней станет ValuesFest 2022 благодаря тебе! Проверь остальные категории, может, есть еще что-то интересное, чем ты еще не поделился?)', reply_markup=markup)
 
 
 @bot.message_handler(commands=['start'])
 def welcome(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    item_1 = types.KeyboardButton('Фотографии в год открытия')
-    item_2 = types.KeyboardButton('Рисунки "Банк будущего"')
-    item_3 = types.KeyboardButton('Видео "Взгляд снизу"')
-    item_4 = types.KeyboardButton('Фотография с видом из окна офиса')
-    item_5 = types.KeyboardButton('Фотографии "До/после"')
-    item_6 = types.KeyboardButton('Задать вопрос')
-    markup.add(item_1, item_2)
-    markup.add(item_3, item_4)
-    markup.add(item_5, item_6)
+    # markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    # item_1 = types.KeyboardButton('Фотографии в год открытия')
+    # item_2 = types.KeyboardButton('Рисунки "Банк будущего"')
+    # item_3 = types.KeyboardButton('Видео "Взгляд снизу"')
+    # item_4 = types.KeyboardButton('Фотография с видом из окна офиса')
+    # item_5 = types.KeyboardButton('Фотографии "До/после"')
+    # item_6 = types.KeyboardButton('Задать вопрос')
+    # markup.add(item_1, item_2)
+    # markup.add(item_3, item_4)
+    # markup.add(item_5, item_6)
 
-    markup_inline = types.InlineKeyboardMarkup(row_width=2)
+    markup_inline = types.InlineKeyboardMarkup(row_width=1)
     item_inline_1 = types.InlineKeyboardButton('Регистрация', callback_data='register')
-    item_inline_2 = types.InlineKeyboardButton('Указать контактный телефон', callback_data='phone_number')
-    markup_inline.add(item_inline_1, item_inline_2)
+    markup_inline.add(item_inline_1)
     bot.send_message(message.chat.id, '''Привет! 
 Спасибо, что решил поучаствовать в создании Values Fest 2022! 
 Пожалуйста, представься, чтобы мы знали всех наших героев по именам)'''
@@ -120,8 +129,36 @@ def register(call):
             bot.send_message(call.message.chat.id, 'Введите название Вашего города')
 
 
+@bot.message_handler(commands=['buttons'])
+def buttons(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    item_1 = types.KeyboardButton('Фотографии в год открытия')
+    item_2 = types.KeyboardButton('Рисунки "Банк будущего"')
+    item_3 = types.KeyboardButton('Видео "Взгляд снизу"')
+    item_4 = types.KeyboardButton('Фотография с видом из окна офиса')
+    item_5 = types.KeyboardButton('Фотографии "До/после"')
+    item_6 = types.KeyboardButton('Задать вопрос')
+    markup.add(item_1, item_2)
+    markup.add(item_3, item_4)
+    markup.add(item_5, item_6)
+    bot.send_message(message.chat.id,
+                     'Выбирай контент, которым тебе хочется поделиться, чтобы его увидели все участники фестиваля!',
+                     reply_markup=markup)
+
+
 @bot.message_handler(content_types=['text'])
 def body(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    item_1 = types.KeyboardButton('Фотографии в год открытия')
+    item_2 = types.KeyboardButton('Рисунки "Банк будущего"')
+    item_3 = types.KeyboardButton('Видео "Взгляд снизу"')
+    item_4 = types.KeyboardButton('Фотография с видом из окна офиса')
+    item_5 = types.KeyboardButton('Фотографии "До/после"')
+    item_6 = types.KeyboardButton('Задать вопрос')
+    markup.add(item_1, item_2)
+    markup.add(item_3, item_4)
+    markup.add(item_5, item_6)
+
     global register_users
     if message.chat.id in user_last_command:
         if user_last_command[message.chat.id] == 'register':
@@ -132,9 +169,13 @@ def body(message):
             if os.path.exists('./users.json'):
                 with open('./users.json', 'r', encoding="utf-8") as f:
                     register_users = json.load(f)
-            bot.send_message(message.chat.id, '''Очень рады познакомиться! Нажми на кнопку "Указать контактный телефон" под предыдущем сообщением.''')
+            markup_phone_number = types.InlineKeyboardMarkup(row_width=1)
+            item_inline_phone = types.InlineKeyboardButton('Указать контактный телефон', callback_data='phone_number')
+            markup_phone_number.add(item_inline_phone)
+            bot.send_message(message.chat.id, 'Очень рады познакомиться!')
+            bot.send_message(message.chat.id, 'Укажите контактный телефон', reply_markup=markup_phone_number)
             del user_last_command[message.chat.id]
-        if user_last_command[message.chat.id] == 'phone_number':
+        elif user_last_command[message.chat.id] == 'phone_number':
             register_users[str(message.chat.id)]['phone_number'] = message.text
             with open('./users.json', 'w', encoding="utf-8") as f:
                 json.dump(register_users, f, ensure_ascii=False)
@@ -142,7 +183,7 @@ def body(message):
                 with open('./users.json', 'r', encoding="utf-8") as f:
                     register_users = json.load(f)
             bot.send_message(message.chat.id, 'Номер сохранен')
-            bot.send_message(message.chat.id, 'Выбирай контент, которым тебе хочется поделиться, чтобы его увидели все участники фестиваля!')
+            bot.send_message(message.chat.id, 'Выбирай контент, которым тебе хочется поделиться, чтобы его увидели все участники фестиваля!', reply_markup=markup)
             del user_last_command[message.chat.id]
     if message.chat.id in flag_city_user:
         city_user[message.chat.id] = message.text
