@@ -77,12 +77,9 @@ def upload_to_folder(real_folder_id, file_for_load, file_name, user_name, phone_
 
         file = service_drive.files().create(body=file_metadata, media_body=media,
                                       fields='id').execute()
-        print(F'File with ID: "{file.get("id")}" has added to the folder with '
-              F'ID "{real_folder_id}".')
 
         #запись в таблицу
         file_id_drive = file.get('id')
-        print(file_id_drive)
         list_for_add = []
         if real_folder_id == '1nDtWwr9PuKHK--g4VqVGmGuRQ23eQ0zD':
             list_for_add = [user_name,
