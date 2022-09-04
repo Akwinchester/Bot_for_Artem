@@ -18,10 +18,14 @@ register_users = {}
 city_user = {}
 flag_city_user = []
 
+number_question = {}
+data_for_table = {}
 
 if os.path.exists('./users.json'):
     with open('./users.json', 'r', encoding="utf-8") as f:
         register_users = json.load(f)
+
+
 
 
 def writing_file_to_server(message, type_dir, count, file_name, file_info, user_name, phone_number):
@@ -60,6 +64,8 @@ def writing_file_to_server(message, type_dir, count, file_name, file_info, user_
             bot.send_message(ADMIN_ID,
                              f'пользователь: {user_name} отправил фото {type_dir}. Почта: {phone_number}')
             bot.copy_message(ADMIN_ID, message.chat.id, message.id)
+
+
     elif type_dir == 'drawings_bank_future':
         try:
             downloaded_file = bot.download_file(file_info.file_path)
@@ -239,7 +245,47 @@ def body(message):
                 with open('./users.json', 'r', encoding="utf-8") as f:
                     register_users = json.load(f)
 
+        if user_last_command[message.chat.id] == 'photo_in_the_opening_year':
+            if number_question[message.chat.id] == 0:
+                bot.send_message(message.chat.id, 'Кем вы были на фото?')
+                data_for_table[message.chat.id]['question_1'] = message.text
+                number_question[message.chat.id] = 1
+            elif number_question[message.chat.id] == 1:
+                data_for_table[message.chat.id]['question_2'] = message.text
+                bot.send_message(message.chat.id, 'Какую должность занимаете сейчас?')
+                number_question[message.chat.id] = 2
+            elif number_question[message.chat.id] == 2:
+                data_for_table[message.chat.id]['question_3'] = message.text
+                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                item_1 = types.KeyboardButton('Фотографии в год открытия')
+                item_2 = types.KeyboardButton('Рисунки "Банк будущего"')
+                item_3 = types.KeyboardButton('Видео "Взгляд снизу"')
+                item_4 = types.KeyboardButton('Фотография с видом из окна офиса')
+                item_5 = types.KeyboardButton('Фотографии "До/после"')
+                item_6 = types.KeyboardButton('Задать вопрос')
+                item_7 = types.KeyboardButton('Контент загружен')
+                markup.add(item_1, item_2)
+                markup.add(item_3, item_4)
+                markup.add(item_5)
+                markup.add(item_6, item_7)
+                bot.send_message(message.chat.id, '''Спасибо, что поделились с нами своей историей! Убедитесь, все ли категории вы проверили. Ознакомьтесь со списком еще раз, возможно, есть ещё активности, в которых вы хотите поучаствовать. 
+Если вы проверили все категории и закончили, пожалуйста, нажмите кнопку «Контент загружен»''', reply_markup=markup)
+                add_row_for_csv_file(user_name=data_for_table[message.chat.id]['user_name'], dir=user_last_command[message.chat.id], name_file=data_for_table[message.chat.id]['file_name'],
+                                     link_for_file=f'./{user_last_command[message.chat.id]}/{data_for_table[message.chat.id]["file_name"]}',
+                                     phone_number=data_for_table[message.chat.id]['phone_number'], city=data_for_table[message.chat.id]['city'],
+                                     question_1=data_for_table[message.chat.id]['question_1'],
+                                     question_2=data_for_table[message.chat.id]['question_2'],
+                                     question_3=data_for_table[message.chat.id]['question_3'])
 
+                upload_to_folder(real_folder_id=id_dir_on_drive[user_last_command[message.chat.id]],
+                                 file_for_load=f'./files/{user_last_command[message.chat.id]}/{data_for_table[message.chat.id]["file_name"]}',
+                                 file_name=data_for_table[message.chat.id]['file_name'],
+                                 user_name=data_for_table[message.chat.id]['user_name'], phone_number=data_for_table[message.chat.id]['phone_number'], city=data_for_table[message.chat.id]['city'],
+                                 question_1=data_for_table[message.chat.id]['question_1'],
+                                 question_2=data_for_table[message.chat.id]['question_2'],
+                                 question_3=data_for_table[message.chat.id]['question_3'])
+                shutil.make_archive('files_archive', 'zip', './files')
+                del user_last_command[message.chat.id]
     if message.chat.id in flag_city_user:
         city_user[message.chat.id] = message.text
         bot.send_message(message.chat.id, 'Город добавлен')
@@ -254,6 +300,7 @@ def body(message):
         
 Найдите свое фото из 1996 года, отсканируйте или сфотографируйте на телефон и пришлите, пожалуйста, нам.''')
         user_last_command[message.chat.id] = 'photo_in_the_opening_year'
+        number_question[message.chat.id] = 0
 
 
     elif message.text == 'Рисунки "Банк будущего"':
@@ -295,11 +342,11 @@ def body(message):
 
 
 
-
 @bot.message_handler(content_types=['photo', 'video', 'document'])
 def body_content(message):
     global file_info
     count = 1
+    standard_load = 1
     city = ''
     if str(message.chat.id) in register_users:
 
@@ -324,6 +371,11 @@ def body_content(message):
         if message.photo:
             file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
             file_name = file_info.file_path.split('/')[-1]
+            if message.chat.id in user_last_command:
+                if user_last_command[message.chat.id] == 'photo_in_the_opening_year':
+                    bot.send_message(message.chat.id, 'В каком году сделано фото?')
+                    count = 0
+                    standard_load = 0
         elif message.document:
             file_info = file_info = bot.get_file(message.document.file_id)
             file_name = message.document.file_name
@@ -338,13 +390,22 @@ def body_content(message):
 
         if message.chat.id in user_last_command:
             writing_file_to_server(message, user_last_command[message.chat.id], count=count, file_name=file_name, file_info=file_info, user_name=user_name, phone_number=phone_number)
-            add_row_for_csv_file(user_name=user_name, dir=user_last_command[message.chat.id], name_file=file_name,
-                                 link_for_file=f'./{user_last_command[message.chat.id]}/{file_name}', phone_number=phone_number, city=city)
+            data_for_table[message.chat.id] = {}
+            data_for_table[message.chat.id]['count'] = count
+            data_for_table[message.chat.id]['file_name'] = file_name
+            data_for_table[message.chat.id]['file_info'] = file_info
+            data_for_table[message.chat.id]['user_name'] = user_name
+            data_for_table[message.chat.id]['phone_number'] = phone_number
+            data_for_table[message.chat.id]['city'] = city
 
-            upload_to_folder(real_folder_id=id_dir_on_drive[user_last_command[message.chat.id]],
-                             file_for_load=f'./files/{user_last_command[message.chat.id]}/{file_name}', file_name=file_name,
-                             user_name=user_name, phone_number=phone_number, city=city)
-            shutil.make_archive('files_archive', 'zip', './files')
+            if standard_load == 1:
+                add_row_for_csv_file(user_name=user_name, dir=user_last_command[message.chat.id], name_file=file_name,
+                                     link_for_file=f'./{user_last_command[message.chat.id]}/{file_name}', phone_number=phone_number, city=city)
+
+                upload_to_folder(real_folder_id=id_dir_on_drive[user_last_command[message.chat.id]],
+                                 file_for_load=f'./files/{user_last_command[message.chat.id]}/{file_name}', file_name=file_name,
+                                 user_name=user_name, phone_number=phone_number, city=city)
+                shutil.make_archive('files_archive', 'zip', './files')
             if message.chat.id in group_photo:
                 group_photo[message.chat.id] = group_photo[message.chat.id] - 1
 

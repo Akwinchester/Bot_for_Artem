@@ -9,9 +9,9 @@ def past_link(text, link):
     return rusult
 
 
-def add_row_for_csv_file(user_name, dir, name_file, link_for_file, phone_number, city):
+def add_row_for_csv_file(user_name, dir, name_file, link_for_file, phone_number, city, question_1='', question_2='', question_3=''):
     if not os.path.exists('./files/data.csv'):
-        headlines = ['пользователь', 'Фотографии в год открытия', 'Рисунки "Банк будущего"', 'Видео "Взгляд снизу"', 'Фотография с видом из окна офиса', 'Фотографии "До/после"','Контактный телефон ', 'Город']
+        headlines = ['пользователь', 'Фотографии в год открытия', 'Рисунки "Банк будущего"', 'Видео "Взгляд снизу"', 'Фотография с видом из окна офиса', 'Фотографии "До/после"','Контактный телефон ', 'Город', 'Год', 'Тогда', 'Сейчас']
         with open('files/data.csv', 'w', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=';', lineterminator='\n')
             writer.writerow(headlines)
@@ -19,7 +19,7 @@ def add_row_for_csv_file(user_name, dir, name_file, link_for_file, phone_number,
     if dir == 'photo_in_the_opening_year':
         with open('./files/data.csv', 'a', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=';',  lineterminator='\n')
-            writer.writerow((user_name, past_link(name_file, link_for_file),'','','','', phone_number, city))
+            writer.writerow((user_name, past_link(name_file, link_for_file),'','','','', phone_number, city, question_1, question_2, question_3))
     if dir == 'drawings_bank_future':
         with open('./files/data.csv', 'a', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=';',  lineterminator='\n')

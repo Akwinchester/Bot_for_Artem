@@ -21,7 +21,7 @@ def add( service_table, values, range = None):
         valueInputOption='USER_ENTERED', body=body).execute()
 
 
-def upload_to_folder(real_folder_id, file_for_load, file_name, user_name, phone_number, city):
+def upload_to_folder(real_folder_id, file_for_load, file_name, user_name, phone_number, city, question_1='', question_2='', question_3=''):
     SCOPES = ['https://www.googleapis.com/auth/drive'+'https://www.googleapis.com/auth/spreadsheets']
     creds = None
     # if os.path.exists('token.json'):
@@ -83,7 +83,7 @@ def upload_to_folder(real_folder_id, file_for_load, file_name, user_name, phone_
         list_for_add = []
         if real_folder_id == '1nDtWwr9PuKHK--g4VqVGmGuRQ23eQ0zD':
             list_for_add = [user_name,
-                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")','','','','', phone_number, city]
+                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")','','','','', phone_number, city, question_1, question_2, question_3]
         elif real_folder_id == '1j6Ry93iaxJkzY6cCNGk9Y1NxjShraEfP':
             list_for_add = [user_name, '',
                             f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")','','','', phone_number, city]
