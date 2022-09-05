@@ -21,7 +21,8 @@ def add( service_table, values, range = None):
         valueInputOption='USER_ENTERED', body=body).execute()
 
 
-def upload_to_folder(real_folder_id, file_for_load, file_name, user_name, phone_number, city, question_1='', question_2='', question_3='', name_age='', job_title='', description='', last_name=''):
+def upload_to_folder(real_folder_id, file_for_load, file_name, user_name, phone_number, city, chat_id, data_for_table={}):
+    print(data_for_table)
     SCOPES = ['https://www.googleapis.com/auth/drive'+'https://www.googleapis.com/auth/spreadsheets']
     creds = None
     # if os.path.exists('token.json'):
@@ -83,19 +84,22 @@ def upload_to_folder(real_folder_id, file_for_load, file_name, user_name, phone_
         list_for_add = []
         if real_folder_id == '1nDtWwr9PuKHK--g4VqVGmGuRQ23eQ0zD':
             list_for_add = [user_name,
-                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")','','','','', phone_number, city, question_1, question_2, question_3]
+                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")','','','','', phone_number, city, data_for_table[chat_id]['question_1'],
+                            data_for_table[chat_id]['question_2'], data_for_table[chat_id]['question_3']]
         elif real_folder_id == '1j6Ry93iaxJkzY6cCNGk9Y1NxjShraEfP':
             list_for_add = [user_name, '',
-                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")','','','', phone_number, city,'','','', name_age, job_title]
+                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")','','','', phone_number, city, '', '', data_for_table[chat_id]['job_title'], data_for_table[chat_id]['name_child'],
+                            data_for_table[chat_id]['age']]
         elif real_folder_id == '1FfaFJrv2NZYVPwaAV3K0dtmKaWBdTMfo':
             list_for_add = [user_name, '', '',
-                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")','','', phone_number, city,'','','', '', job_title, '', last_name]
+                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")','','', phone_number, city, '', '', data_for_table[chat_id]['job_title_new'],
+                             data_for_table[chat_id]['name_child_new'],'',data_for_table[chat_id]['last_name']]
         elif real_folder_id == '1LrmRdzERk4UocJFkH88GBt9fjQB04VTv':
             list_for_add = [user_name, '', '', '',
                             f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")','', phone_number, city]
         elif real_folder_id == '1Njz5FdvAcElVY6rFucxCX7Ffh-IL_AkT':
             list_for_add = [user_name, '', '', '', '',
-                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")', phone_number, city, '', '','', '','', description]
+                            f'=ГИПЕРССЫЛКА("https://drive.google.com/file/d/{file_id_drive}/view?usp=sharing"; "{file_name}")', phone_number, city,'','','','','','', data_for_table[chat_id]['description']]
         add(service_table=service_table, values=list_for_add)
 
     except HttpError as error:
@@ -103,4 +107,3 @@ def upload_to_folder(real_folder_id, file_for_load, file_name, user_name, phone_
         file = None
 
     return file.get('id')
-

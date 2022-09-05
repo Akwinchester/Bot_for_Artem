@@ -9,9 +9,9 @@ def past_link(text, link):
     return rusult
 
 
-def add_row_for_csv_file(user_name, dir, name_file, link_for_file, phone_number, city, question_1='', question_2='', question_3='', name_age='', job_title='', description='', last_name=''):
+def add_row_for_csv_file(user_name, dir, name_file, link_for_file, phone_number, city, chat_id, data_for_table={}):
     if not os.path.exists('./files/data.csv'):
-        headlines = ['пользователь', 'Фотографии в год открытия', 'Рисунки "Банк будущего"', 'Видео "Взгляд снизу"', 'Фотография с видом из окна офиса', 'Фотографии "До/после"','Контактный телефон ', 'Город', 'Год', 'Тогда', 'Сейчас']
+        headlines = ['пользователь', 'Фотографии в год открытия', 'Рисунки "Банк будущего"', 'Видео "Взгляд снизу"', 'Фотография с видом из окна офиса', 'Фотографии "До/после"','Контактный телефон ', 'Город']
         with open('files/data.csv', 'w', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=';', lineterminator='\n')
             writer.writerow(headlines)
@@ -19,15 +19,18 @@ def add_row_for_csv_file(user_name, dir, name_file, link_for_file, phone_number,
     if dir == 'photo_in_the_opening_year':
         with open('./files/data.csv', 'a', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=';',  lineterminator='\n')
-            writer.writerow((user_name, past_link(name_file, link_for_file),'','','','', phone_number, city, question_1, question_2, question_3))
+            writer.writerow((user_name, past_link(name_file, link_for_file),'','','','', phone_number, city,  data_for_table[chat_id]['question_1'],
+                            data_for_table[chat_id]['question_2'], data_for_table[chat_id]['question_3']))
     if dir == 'drawings_bank_future':
         with open('./files/data.csv', 'a', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=';',  lineterminator='\n')
-            writer.writerow((user_name, '', past_link(name_file, link_for_file), '','','', phone_number, city,'','','', name_age, job_title))
+            writer.writerow((user_name, '', past_link(name_file, link_for_file), '','','', phone_number, city,  '', '', data_for_table[chat_id]['job_title'], data_for_table[chat_id]['name_child'],
+                            data_for_table[chat_id]['age']))
     if dir == 'video_view_bottom':
         with open('./files/data.csv', 'a', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=';',  lineterminator='\n')
-            writer.writerow((user_name, '', '', past_link(name_file, link_for_file), '','', phone_number, city,'','','', '', job_title, '', last_name))
+            writer.writerow((user_name, '', '', past_link(name_file, link_for_file), '','', phone_number, city,  '', '', data_for_table[chat_id]['job_title_new'],
+                             data_for_table[chat_id]['name_child_new'],'',data_for_table[chat_id]['last_name']))
     if dir == 'photo_view_from_office_window':
         with open('./files/data.csv', 'a', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=';',  lineterminator='\n')
@@ -35,5 +38,5 @@ def add_row_for_csv_file(user_name, dir, name_file, link_for_file, phone_number,
     if dir == 'photo_before_after':
         with open('./files/data.csv', 'a', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=';',  lineterminator='\n')
-            writer.writerow((user_name, '', '', '', '', past_link(name_file, link_for_file), phone_number, city,  '', '','', '','', description))
+            writer.writerow((user_name, '', '', '', '', past_link(name_file, link_for_file), phone_number, city, '','','','','','', data_for_table[chat_id]['description']))
 #//////////////////////////////////////////////////////////////
