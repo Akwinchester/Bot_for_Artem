@@ -11,7 +11,7 @@ def past_link(text, link):
 
 def add_row_for_csv_file(user_name, dir, name_file, link_for_file, phone_number, city, chat_id, data_for_table={}):
     if not os.path.exists('./files/data.csv'):
-        headlines = ['пользователь', 'Фотографии в год открытия', 'Рисунки "Банк будущего"', 'Видео "Взгляд снизу"', 'Фотография с видом из окна офиса', 'Фотографии "До/после"','Контактный телефон ', 'Город']
+        headlines = ['Пользователь',	'Фотографии в год открытия',	'Рисунки "Банк будущего"',	'Видео "Взгляд снизу"',	'Фотография с видом из окна офиса',	'Фотографии "Моменты Райффайзен Банк Будущего"', 'Почта',	'Город',	'Год',	'Тогда',	'Должность сейчас',	'Имя ребенка',	'Возраст ребенка', 	'Фамилия ребенка',	'Описание']
         with open('files/data.csv', 'w', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=';', lineterminator='\n')
             writer.writerow(headlines)
